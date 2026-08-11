@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>My orders — Orbital Parts</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header>
+      <strong>Orbital Parts</strong>
+      <nav aria-label="Main">
+        <a href="/">Home</a>
+        <a href="/catalog.html">Catalog</a>
+      </nav>
+      <button id="sign-out" class="secondary" type="button">Sign out</button>
+    </header>
+
+    <main>
+      <h1>My orders</h1>
+      <p>Signed in as <strong data-testid="current-user">testpilot</strong>.</p>
+
+      <table>
+        <caption class="muted">Recent orders</caption>
+        <thead>
+          <tr>
+            <th scope="col">Order</th>
+            <th scope="col">Placed</th>
+            <th scope="col">Status</th>
+            <th scope="col">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>ORD-40127</td>
+            <td>2026-07-30</td>
+            <td>Delivered</td>
+            <td>$3,984.00</td>
+          </tr>
+          <tr>
+            <td>ORD-40126</td>
+            <td>2026-07-11</td>
+            <td>In transit</td>
+            <td>$1,320.00</td>
+          </tr>
+        </tbody>
+      </table>
+    </main>
+
+    <script>
+      document.getElementById('sign-out').addEventListener('click', async () => {
+        await fetch('/api/logout', { method: 'POST' });
+        location.assign('/');
+      });
+    </script>
+  </body>
+</html>

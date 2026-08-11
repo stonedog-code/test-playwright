@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sign in — Orbital Parts</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header>
+      <strong>Orbital Parts</strong>
+      <nav aria-label="Main">
+        <a href="/">Home</a>
+        <a href="/catalog.html">Catalog</a>
+      </nav>
+    </header>
+
+    <main>
+      <h1>Sign in</h1>
+
+      <form id="login-form" novalidate>
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" autocomplete="username" />
+
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" />
+
+        <p id="form-error" class="error" role="alert" hidden></p>
+
+        <p>
+          <button id="submit" type="submit">Sign in</button>
+          <span id="pending" class="muted spinner" hidden>Signing in…</span>
+        </p>
+      </form>
+
+      <p class="muted">
+        Demo credentials: <code>testpilot</code> / <code>correct-horse</code>
+      </p>
+    </main>
+
+    <script>
+      const form = document.getElementById('login-form');
+      const error = document.getElementById('form-error');
+      const submit = document.getElementById('submit');
+      const pending = document.getElementById('pending');
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        error.hidden = true;
+        submit.disabled = true;
+        pending.hidden = false;
+
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value,
+          }),
+        });
+
+        submit.disabled = false;
+        pending.hidden = true;
+
+        if (response.ok) {
+          const next = new URLSearchParams(location.search).get('next');
+          location.assign(next || '/account/orders.html');
+          return;
+        }
+
+        const body = await response.json();
+        error.textContent = body.error;
+        error.hidden = false;
+      });
+    </script>
+  </body>
+</html>

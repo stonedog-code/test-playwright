@@ -1,0 +1,16 @@
+node_modules/
+
+# Playwright output
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# Saved authentication state — a real session token; never commit it
+/.auth/
+
+# Editors
+.idea/
+.vscode/
+*.swp
+.DS_Store

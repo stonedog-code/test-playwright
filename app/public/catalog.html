@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Catalog — Orbital Parts</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header>
+      <strong>Orbital Parts</strong>
+      <nav aria-label="Main">
+        <a href="/">Home</a>
+        <a href="/checkout.html">Checkout</a>
+      </nav>
+    </header>
+
+    <main>
+      <h1>Catalog</h1>
+
+      <label for="search">Search parts</label>
+      <input id="search" type="search" placeholder="e.g. thruster" />
+
+      <fieldset>
+        <legend>Availability</legend>
+        <label><input type="radio" name="stock" value="all" checked /> All parts</label>
+        <label><input type="radio" name="stock" value="in" /> In stock only</label>
+        <label><input type="radio" name="stock" value="out" /> Out of stock only</label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Category</legend>
+        <label><input type="checkbox" name="category" value="engines" /> Engines</label>
+        <label><input type="checkbox" name="category" value="avionics" /> Avionics</label>
+        <label><input type="checkbox" name="category" value="structures" /> Structures</label>
+      </fieldset>
+
+      <label for="sort">Sort by</label>
+      <select id="sort">
+        <option value="name">Name (A–Z)</option>
+        <option value="price-asc">Price (low to high)</option>
+        <option value="price-desc">Price (high to low)</option>
+      </select>
+
+      <h2>Results</h2>
+      <p id="result-count" aria-live="polite">Loading…</p>
+
+      <ul class="products" id="results" aria-label="Search results"></ul>
+
+      <p id="empty" class="muted" hidden>No parts match those filters.</p>
+    </main>
+
+    <script>
+      const results = document.getElementById('results');
+      const count = document.getElementById('result-count');
+      const empty = document.getElementById('empty');
+
+      function money(cents) {
+        return '$' + (cents / 100).toLocaleString('en-US', { minimumFractionDigits: 2 });
+      }
+
+      function selectedCategories() {
+        return [...document.querySelectorAll('input[name="category"]:checked')].map((c) => c.value);
+      }
+
+      async function refresh() {
+        const params = new URLSearchParams();
+        params.set('stock', document.querySelector('input[name="stock"]:checked').value);
+        for (const category of selectedCategories()) params.append('category', category);
+
+        const search = document.getElementById('search').value.trim();
+        if (search) params.set('search', search);
+
+        const response = await fetch('/api/products?' + params.toString());
+        const body = await response.json();
+
+        const sort = document.getElementById('sort').value;
+        const products = [...body.products].sort((a, b) => {
+          if (sort === 'price-asc') return a.priceCents - b.priceCents;
+          if (sort === 'price-desc') return b.priceCents - a.priceCents;
+          return a.name.localeCompare(b.name);
+        });
+
+        results.innerHTML = '';
+        for (const product of products) {
+          const item = document.createElement('li');
+          item.dataset.testid = 'product-' + product.id;
+          item.innerHTML =
+            '<span class="name">' + product.name + '</span>' +
+            '<span class="price">' + money(product.priceCents) + '</span>' +
+            '<span class="badge ' + (product.inStock ? 'in' : 'out') + '">' +
+            (product.inStock ? 'In stock' : 'Out of stock') + '</span>';
+
+          const button = document.createElement('button');
+          button.textContent = 'Add to cart';
+          button.setAttribute('aria-label', 'Add ' + product.name + ' to cart');
+          button.disabled = !product.inStock;
+          button.addEventListener('click', () => toast(product.name + ' added to cart'));
+          item.appendChild(button);
+
+          results.appendChild(item);
+        }
+
+        count.textContent = products.length + ' part' + (products.length === 1 ? '' : 's') + ' found';
+        empty.hidden = products.length > 0;
+        // Hide the list entirely when it is empty, rather than leaving an empty
+        // <ul> in the DOM: an empty list has no bounding box, so it is present
+        // but not "visible", which is a confusing thing for a test to find.
+        results.hidden = products.length === 0;
+      }
+
+      function toast(message) {
+        let el = document.getElementById('toast');
+        if (!el) {
+          el = document.createElement('div');
+          el.id = 'toast';
+          el.setAttribute('role', 'status');
+          document.body.appendChild(el);
+        }
+        el.textContent = message;
+        el.hidden = false;
+        clearTimeout(el.dataset.timer);
+        el.dataset.timer = setTimeout(() => (el.hidden = true), 2000);
+      }
+
+      for (const input of document.querySelectorAll('input[name="stock"], input[name="category"], #sort')) {
+        input.addEventListener('change', refresh);
+      }
+      document.getElementById('search').addEventListener('input', refresh);
+
+      refresh();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Checkout — Orbital Parts</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header>
+      <strong>Orbital Parts</strong>
+      <nav aria-label="Main">
+        <a href="/">Home</a>
+        <a href="/catalog.html">Catalog</a>
+      </nav>
+    </header>
+
+    <main>
+      <h1>Checkout</h1>
+
+      <h2>Your basket</h2>
+      <table id="basket">
+        <caption class="muted">Items in this order</caption>
+        <thead>
+          <tr>
+            <th scope="col">Part</th>
+            <th scope="col">Quantity</th>
+            <th scope="col">Price</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Ion Thruster Mk II</td>
+            <td>1</td>
+            <td>$2,499.00</td>
+          </tr>
+          <tr>
+            <td>Star Tracker 9</td>
+            <td>2</td>
+            <td>$1,485.00</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <form id="order-form" novalidate>
+        <h2>Delivery</h2>
+
+        <label for="fullName">Full name</label>
+        <input id="fullName" name="fullName" type="text" autocomplete="name" />
+        <p class="error" data-error-for="fullName" hidden></p>
+
+        <label for="email">Email address</label>
+        <input id="email" name="email" type="email" autocomplete="email" />
+        <p class="error" data-error-for="email" hidden></p>
+
+        <label for="country">Country</label>
+        <select id="country" name="country">
+          <option value="">Choose a country…</option>
+          <option value="us">United States</option>
+          <option value="gb">United Kingdom</option>
+          <option value="de">Germany</option>
+          <option value="jp">Japan</option>
+        </select>
+        <p class="error" data-error-for="country" hidden></p>
+
+        <label for="deliverBy">Deliver by</label>
+        <input id="deliverBy" name="deliverBy" type="date" />
+
+        <fieldset>
+          <legend>Shipping speed</legend>
+          <label><input type="radio" name="shipping" value="standard" /> Standard (5–7 days)</label>
+          <label><input type="radio" name="shipping" value="express" /> Express (2 days)</label>
+          <label><input type="radio" name="shipping" value="orbital" /> Orbital drop (next launch window)</label>
+          <p class="error" data-error-for="shipping" hidden></p>
+        </fieldset>
+
+        <h2>Paperwork</h2>
+
+        <label for="exportLicence">Export licence (PDF or text)</label>
+        <input id="exportLicence" name="exportLicence" type="file" accept=".pdf,.txt" />
+        <p id="file-chosen" class="muted"></p>
+
+        <label>
+          <input type="checkbox" id="terms" name="terms" />
+          I accept the terms of sale
+        </label>
+        <p class="error" data-error-for="terms" hidden></p>
+
+        <label>
+          <input type="checkbox" id="newsletter" name="newsletter" checked />
+          Email me about new parts
+        </label>
+
+        <p>
+          <button id="place-order" type="submit">Place order</button>
+          <button id="cancel" type="button" class="secondary">Cancel order</button>
+        </p>
+      </form>
+
+      <div id="confirmation" role="status" hidden>
+        <h2>Order confirmed</h2>
+        <p>Your order <strong id="order-id"></strong> is on its way.</p>
+      </div>
+
+      <div id="toast" role="status" hidden></div>
+    </main>
+
+    <script>
+      const form = document.getElementById('order-form');
+      const confirmation = document.getElementById('confirmation');
+
+      function clearErrors() {
+        for (const el of document.querySelectorAll('.error')) {
+          el.hidden = true;
+          el.textContent = '';
+        }
+      }
+
+      function showErrors(errors) {
+        for (const [field, message] of Object.entries(errors)) {
+          const el = document.querySelector('[data-error-for="' + field + '"]');
+          if (el) {
+            el.textContent = message;
+            el.hidden = false;
+          }
+        }
+      }
+
+      document.getElementById('exportLicence').addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        document.getElementById('file-chosen').textContent = file ? 'Selected: ' + file.name : '';
+      });
+
+      // A native confirm(), so the dialog-handling example has something real.
+      document.getElementById('cancel').addEventListener('click', () => {
+        if (confirm('Cancel this order? Your basket will be emptied.')) {
+          form.reset();
+          const toast = document.getElementById('toast');
+          toast.textContent = 'Order cancelled';
+          toast.hidden = false;
+        }
+      });
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        clearErrors();
+
+        const shipping = document.querySelector('input[name="shipping"]:checked');
+        const payload = {
+          fullName: document.getElementById('fullName').value,
+          email: document.getElementById('email').value,
+          country: document.getElementById('country').value,
+          deliverBy: document.getElementById('deliverBy').value,
+          shipping: shipping ? shipping.value : '',
+          terms: document.getElementById('terms').checked,
+          newsletter: document.getElementById('newsletter').checked,
+        };
+
+        const response = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (response.status === 401) {
+          location.assign('/login.html?next=' + encodeURIComponent('/checkout.html'));
+          return;
+        }
+
+        const body = await response.json();
+
+        if (!response.ok) {
+          showErrors(body.errors ?? {});
+          return;
+        }
+
+        document.getElementById('order-id').textContent = body.orderId;
+        form.hidden = true;
+        confirmation.hidden = false;
+      });
+    </script>
+  </body>
+</html>

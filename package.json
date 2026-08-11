@@ -1,0 +1,38 @@
+{
+  "name": "@nehsa-net/test-playwright",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Reference Playwright framework: UI and API end-to-end tests against a self-contained demo app",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node --import tsx app/server.ts",
+    "test": "playwright test --project=chromium --project=api",
+    "test:ui": "playwright test --project=chromium",
+    "test:api": "playwright test --project=api",
+    "test:headed": "playwright test --headed --project=chromium",
+    "test:debug": "playwright test --debug --project=chromium",
+    "test:watch": "playwright test --ui",
+    "test:all-browsers": "playwright test --project=chromium --project=firefox --project=webkit --project=api",
+    "test:mobile": "playwright test --project=mobile-chrome",
+    "report": "playwright show-report",
+    "codegen": "playwright codegen http://127.0.0.1:3100",
+    "trace": "playwright show-trace",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "ci": "npm run typecheck && npm run lint && npm test"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.1",
+    "@eslint/js": "^9.20.0",
+    "@playwright/test": "^1.50.0",
+    "@types/node": "^22.13.0",
+    "eslint": "^9.20.0",
+    "eslint-plugin-playwright": "^2.2.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.24.0"
+  }
+}

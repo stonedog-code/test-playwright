@@ -1,0 +1,96 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint and types
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+
+  # API tests need no browser, so they report in seconds. Keeping them in their
+  # own job means a broken endpoint is diagnosed before the browser job has
+  # finished downloading Chromium.
+  api:
+    name: API tier
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright test --project=api
+
+  ui:
+    name: UI tier (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    strategy:
+      # Do not cancel Firefox because Chromium failed — the whole point of the
+      # matrix is finding out which browsers are affected.
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      # Install only the browser this shard needs. `--with-deps` pulls the
+      # system libraries, which the GitHub runner does not ship.
+      - name: Install browser
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Run tests
+        run: npx playwright test --project=${{ matrix.browser }}
+
+      # Upload on failure only. A report for a green run is noise nobody opens,
+      # and these artifacts are large.
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-${{ matrix.browser }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
+  all-green:
+    name: All tiers green
+    runs-on: ubuntu-latest
+    needs: [lint, api, ui]
+    if: always()
+    steps:
+      - name: Fail if any tier failed or was skipped
+        run: |
+          results='${{ join(needs.*.result, ' ') }}'
+          echo "tier results: $results"
+          for r in $results; do
+            if [ "$r" != "success" ]; then
+              echo "::error::a required tier did not pass: $results"
+              exit 1
+            fi
+          done
