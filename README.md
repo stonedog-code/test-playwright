@@ -66,6 +66,32 @@ npm run test:all-browsers
 
 ---
 
+## Running the tests without CI
+
+**GitHub Actions is disabled on this repository.** Nothing runs automatically on
+push, so the gate is whatever you run by hand.
+
+The workflow in `.github/workflows/test.yml` is kept deliberately: it is
+reference material, and it has been verified by executing it in a real runner
+container with [`act`](https://github.com/nektos/act). It is accurate; it is
+simply not switched on.
+
+| Command | What it covers |
+|---|---|
+| `npm test` | Chromium plus the API project. The one to run on every change |
+| `npm run test:api` | API tier only — no browser, ~2s |
+| `npm run test:ui` | Browser tier only |
+| `npm run test:all-browsers` | Chromium, Firefox and WebKit |
+| `npm run test:watch` | Playwright UI mode, for developing a test |
+| `npm run typecheck` / `npm run lint` | Types and lint on their own |
+| `npm run ci` | Everything the workflow would run |
+
+**`npm run ci` is the gate.** With Actions off it is the only thing between a
+mistake and `main`, so run it before every commit — not just before the ones
+that feel risky.
+
+---
+
 ## Where Playwright fits
 
 Playwright is the **end-to-end tier**. It answers the one question unit and
@@ -680,6 +706,11 @@ listens. Add `.auth/` to `.gitignore` — it holds a real session token.
 6. **Accessibility checks** per page.
 
 ### Step 4 — Wire the gate
+
+> **Note:** Actions is switched off on *this* repository (see "Running the tests
+> without CI"), so the gate here is `npm run ci`, run by hand. The advice in this
+> section is for the repo you are setting up, where you should wire it properly.
+
 
 Copy the workflow and require the **All tiers green** check in branch
 protection. Note the matrix installs only the browser each shard needs, and
