@@ -14,20 +14,55 @@ the `block-commit-on-main` hook to allow it.
 Single-author reference repo, no runtime, no deploy, no consumers to break. The
 exemption is **not inherited** — it covers this repo only, at this root.
 
-## GitHub Actions is disabled here
+**But `main` is now branch-protected** (`["All tiers green"]`), so a direct push
+bypasses the gate rather than satisfying it — it works only because
+`enforce_admins` is `false`. Recent work has used PRs for exactly that reason,
+and a PR here costs nothing: `#1` and `#3` both went through one. Prefer a PR
+when the change can fail CI; keep the direct path for README typos and for the
+case the escape hatch exists for, which is CI itself being broken.
 
-Actions is switched off at the repository level, so **nothing runs on push**.
-`npm run ci` is the only gate, and it runs on your machine or not at all.
+## GitHub Actions RUNS here, and `main` is protected
 
-The workflow in `.github/workflows/test.yml` is kept on purpose: it is part of
-what this repo teaches, and it has been verified by executing it in a real
-runner container with `act`. Do not delete it, and do not assume it ran.
+**This section said the opposite until 2026-08-25, and it was measurably wrong.**
+Actions is enabled, the workflow runs on every push and PR, and `main` requires
+a passing check:
 
-Re-enable with:
+```console
+$ gh api repos/stonedog-code/test-playwright/actions/permissions
+actions_enabled=true  allowed=all
+$ gh api repos/stonedog-code/test-playwright/branches/main/protection \
+    -q '.required_status_checks.contexts'
+["All tiers green"]
+```
+
+Verified by execution, not by the setting: run `32893632375` on `main` completed
+`success` with real runner ids and executed steps.
+
+**A note claiming CI does not run is the most expensive kind of stale guidance** —
+it tells the next reader to discount a red check, and the day it stops being true
+is the day a real failure gets waved through on its authority. That nearly
+happened: `main` sat red for hours on a genuine two-browser failure while this
+file said nothing runs.
+
+**Check a red before believing it, in either direction:**
 
 ```bash
-gh api -X PUT repos/nehsa-net/<repo>/actions/permissions -F enabled=true
+gh api repos/stonedog-code/test-playwright/actions/runs/<id>/jobs \
+  -q '.jobs[] | "\(.name): \(.conclusion) runner=\"\(.runner_name)\" steps=\(.steps|length)"'
 ```
+
+`runner=""` with `steps=0` means no runner was allocated and nothing executed —
+the verdict says nothing about the branch. A runner id plus executed steps means
+the failure is real.
+
+`npm run ci` is still worth running before you push: it is faster than CI and it
+is the only gate that exists on a machine with no network. But it is **not**
+equivalent — it runs **chromium only**, so the firefox and webkit shards can be
+red while it is green. That gap is why the 2026-08-25 breakage was invisible
+locally.
+
+The workflow in `.github/workflows/test.yml` is part of what this repo teaches.
+Do not delete it.
 
 ## What must stay true
 
