@@ -61,10 +61,14 @@ jobs:
           cache: npm
       - run: npm ci
 
-      # Install only the browser this shard needs. `--with-deps` pulls the
-      # system libraries, which the GitHub runner does not ship.
-      - name: Install browser
-        run: npx playwright install --with-deps ${{ matrix.browser }}
+      # Install the shard's browser AND chromium. Every UI project declares
+      # `dependencies: ['setup']`, and the setup project has no `use` block, so
+      # it inherits the default and launches CHROMIUM regardless of the shard.
+      # Installing only `matrix.browser` therefore breaks firefox and webkit at
+      # auth.setup.ts; chromium passed only because it happened to install the
+      # browser setup needs. See NEH-1180.
+      - name: Install browsers
+        run: npx playwright install --with-deps ${{ matrix.browser }} chromium
 
       - name: Run tests
         run: npx playwright test --project=${{ matrix.browser }}
