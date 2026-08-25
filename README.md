@@ -7,14 +7,14 @@ checks, and a catalogue of tips for driving real UI primitives.
 Everything here passes, lints clean, and typechecks. It ships its own demo
 application, so there is nothing to point it at and nothing to configure.
 
-**Repo:** `github.com/nehsa-net/test-playwright` · **Licence:** MIT
+**Repo:** `github.com/stonedog-code/test-playwright` · **Licence:** MIT
 **Stack:** Playwright 1.62 · TypeScript 5.7 · axe-core
 
 ---
 ## Quick start
 
 ```bash
-git clone git@github.com:nehsa-net/test-playwright.git
+git clone git@github.com:stonedog-code/test-playwright.git
 cd test-playwright
 npm ci
 npx playwright install chromium
