@@ -26,7 +26,7 @@ runner container with `act`. Do not delete it, and do not assume it ran.
 Re-enable with:
 
 ```bash
-gh api -X PUT repos/nehsa-net/<repo>/actions/permissions -F enabled=true
+gh api -X PUT repos/stonedog-code/<repo>/actions/permissions -F enabled=true
 ```
 
 ## What must stay true

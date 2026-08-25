@@ -1,5 +1,5 @@
 {
-  "name": "@nehsa-net/test-playwright",
+  "name": "@stonedog-code/test-playwright",
   "version": "1.0.0",
   "private": true,
   "description": "Reference Playwright framework: UI and API end-to-end tests against a self-contained demo app",
