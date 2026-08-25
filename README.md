@@ -11,21 +11,6 @@ application, so there is nothing to point it at and nothing to configure.
 **Stack:** Playwright 1.62 · TypeScript 5.7 · axe-core
 
 ---
-
-## Pasting this into OneNote
-
-Open the README on GitHub in a browser (the rendered view, not "Raw"), select
-the article body, copy, paste into OneNote. Headings, tables and code blocks
-survive intact.
-
-Pasting from the raw `.md` gives plain text with `#` and backticks showing — if
-that happens, you copied the wrong view.
-
-After pasting: select all and set code blocks to Consolas 10pt, and drag the
-right edge of any table to widen it.
-
----
-
 ## Quick start
 
 ```bash
